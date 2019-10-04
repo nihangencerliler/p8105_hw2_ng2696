@@ -32,12 +32,50 @@ mr_trash_wheel_monthly =
 head(mr_trash_wheel_monthly)
 ```
 
-## Including Plots
+## Problem 2
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+Read and clean pols_month:
+```{r}
+pols_month=read_csv("./p8105_hw2_ng2696_files/fivethirtyeight_datasets/pols-month.csv") %>%
+separate(mon,c("year","month","day"),"-") %>%
+  mutate(month=month.name[as.integer(month)]) %>%
+  mutate(president=recode(prez_dem, `1` = "dem", `0` = "gop")) %>%
+  select(-prez_dem,-prez_gop,-day)
+head(pols_month)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Read and clean snp:
+```{r}
+snp=read_csv("./p8105_hw2_ng2696_files/fivethirtyeight_datasets/snp.csv") %>%
+separate(date,c("month","day","year"),"/") %>%
+  mutate(month_integer=as.integer(month),month=month.name[month_integer]) %>%
+  arrange(year, month_integer) %>%
+  select(year, month, close, -day, -month_integer) 
+
+snp
+```
+Read and clean unemployment:
+```{r}
+unemployment=read_csv("./p8105_hw2_ng2696_files/fivethirtyeight_datasets/unemployment.csv") %>%
+  pivot_longer(Jan:Dec,
+               names_to="month",
+               values_to="percent_unemployed") %>%
+    mutate(month=recode(month, `Jan` = "January", `Feb` = "February",`Mar` = "March",`Apr` = "April",`May` = "May",`Jun` = "June",`Jul` = "July",`Aug` = "August",`Sep` = "September",`Oct` = "October",`Nov` = "November", `Dec`="December")) %>%
+    janitor::clean_names() 
+unemployment
+```
+
+Merge snp and pols_month:
+```{r}
+snp_pols_month=
+full_join(snp, pols_month, by=c("year","month")) %>%
+  mutate(year=as.integer(year))
+snp_pols_month
+```
+Merge above dataset with unemployment:
+
+```{r}
+snp_pols_unemployment=
+full_join(snp_pols_month, unemployment, by=c("year","month"))
+snp_pols_unemployment
+```
