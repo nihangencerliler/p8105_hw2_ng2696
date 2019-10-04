@@ -1,0 +1,43 @@
+---
+title: "p8105_hw2_ng2696"
+author: "Nihan Gencerliler"
+date: "10/2/2019"
+output: github_document
+---
+
+# Homework 2
+```{r setup}
+library(readxl)
+library (ggplot2)
+library(tidyverse)
+```
+## Problem 1
+
+```{r}
+mr_trash_wheel = read_excel("./p8105_hw2_ng2696_files/Trash-Wheel-Collection-Totals-8-6-19.xlsx",sheet="Mr. Trash Wheel", range="A2:N406") %>%
+  janitor::clean_names() %>%
+  drop_na() %>%
+  mutate(sports_balls_integer=as.integer(sports_balls))
+head(mr_trash_wheel)
+```
+```{r}
+mr_trash_wheel_2017 = read_excel("./p8105_hw2_ng2696_files/Trash-Wheel-Collection-Totals-8-6-19.xlsx",sheet="2017 Precipitation",range="A2:B14") %>%
+  mutate(year=2017)
+mr_trash_wheel_2018 = read_excel("./p8105_hw2_ng2696_files/Trash-Wheel-Collection-Totals-8-6-19.xlsx",sheet="2018 Precipitation",range="A2:B14") %>%
+  mutate(year=208)
+mr_trash_wheel_monthly = 
+  bind_rows(mr_trash_wheel_2017,mr_trash_wheel_2018)%>%
+  janitor::clean_names() %>%
+  mutate(month=month.name[month])
+head(mr_trash_wheel_monthly)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
