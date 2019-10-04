@@ -68,14 +68,59 @@ unemployment
 Merge snp and pols_month:
 ```{r}
 snp_pols_month=
-full_join(snp, pols_month, by=c("year","month")) %>%
+left_join(snp, pols_month, by=c("year","month")) %>%
   mutate(year=as.integer(year))
 snp_pols_month
 ```
 Merge above dataset with unemployment:
-
 ```{r}
 snp_pols_unemployment=
-full_join(snp_pols_month, unemployment, by=c("year","month"))
+left_join(snp_pols_month, unemployment, by=c("year","month"))
 snp_pols_unemployment
 ```
+## Problem 3
+
+Read and clean dataset:
+```{r}
+baby_names = read_csv("./p8105_hw2_ng2696_files/Popular_Baby_Names.csv") %>%
+  janitor::clean_names() %>%
+  distinct() %>%
+  mutate(ethnicity=recode(ethnicity,`ASIAN AND PACIFIC ISLANDER` = "Asian and Pacific Islander", `BLACK NON HISPANIC` = "Black Non-hispanic",`HISPANIC` = "Hispanic", `WHITE NON HISPANIC` = "White Non-hispanic",`ASIAN AND PACI` = "Asian and Pacific Islander", `BLACK NON HISP` = "Black Non-hispanic",`WHITE NON HISP` = "White Non-hispanic"),gender=recode(gender, `FEMALE` = "Female", `MALE` = "Male"),childs_first_name=str_to_title(childs_first_name))
+#using unique to check categorical predictors
+unique(pull(baby_names,ethnicity))
+unique(pull(baby_names,gender))
+```
+
+Create table showing popularity of Olivia only:
+```{r}
+olivia=
+  filter(baby_names,childs_first_name=="Olivia") %>%
+  mutate(rank=as.integer(rank))%>%
+  pivot_wider(names_from="year_of_birth", values_from="rank") %>%
+  select(-gender,-count,-childs_first_name) %>%
+  group_by(ethnicity) %>%
+  summarise_each(funs(na.omit))
+knitr::kable(olivia)
+```
+
+Create table of most popular male names:
+
+```{r}
+males=
+  filter(baby_names,gender=="Male",rank==1) %>%
+  mutate(year_of_birth=as.factor(year_of_birth))%>%
+  pivot_wider(names_from="year_of_birth", values_from="childs_first_name") %>%
+  select(-gender,-count,-rank)%>% group_by(ethnicity) %>%
+  summarise_each(funs(na.omit))  
+
+knitr::kable(males)
+```
+
+
+Scatterplot of male names:
+```{r}
+males_plot=
+  filter(baby_names,gender=="Male",year_of_birth==2016,ethnicity=="White Non-hispanic")
+ggplot(males_plot,aes(x=rank,y=count)) + geom_text(aes(label=childs_first_name), size=2)
+```
+
