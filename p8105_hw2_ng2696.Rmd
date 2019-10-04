@@ -12,25 +12,37 @@ library (ggplot2)
 library(tidyverse)
 ```
 ## Problem 1
-
+Read and clean Mr Trash Wheel sheet:
 ```{r}
 mr_trash_wheel = read_excel("./p8105_hw2_ng2696_files/Trash-Wheel-Collection-Totals-8-6-19.xlsx",sheet="Mr. Trash Wheel", range="A2:N406") %>%
   janitor::clean_names() %>%
   drop_na() %>%
   mutate(sports_balls_integer=as.integer(sports_balls))
-head(mr_trash_wheel)
 ```
+Read and clean sheets with aggregate monthly data for 2017 and 2018: 
 ```{r}
 mr_trash_wheel_2017 = read_excel("./p8105_hw2_ng2696_files/Trash-Wheel-Collection-Totals-8-6-19.xlsx",sheet="2017 Precipitation",range="A2:B14") %>%
   mutate(year=2017)
 mr_trash_wheel_2018 = read_excel("./p8105_hw2_ng2696_files/Trash-Wheel-Collection-Totals-8-6-19.xlsx",sheet="2018 Precipitation",range="A2:B14") %>%
-  mutate(year=208)
+  mutate(year=2018)
 mr_trash_wheel_monthly = 
   bind_rows(mr_trash_wheel_2017,mr_trash_wheel_2018)%>%
   janitor::clean_names() %>%
   mutate(month=month.name[month])
-head(mr_trash_wheel_monthly)
 ```
+
+Exploring the two datasets:
+```{r}  
+dim(mr_trash_wheel)
+head(mr_trash_wheel)
+group_by(mr_trash_wheel,year) %>%
+summarize(median_sport_balls=median(sports_balls,na.rm=FALSE))
+head(mr_trash_wheel_monthly)
+dim(mr_trash_wheel_monthly)
+group_by(mr_trash_wheel_monthly,year) %>%
+summarize(total_rain=sum(total,na.rm=FALSE))
+```
+There are 344 observations and 15 variables in mr_trash_wheel. Some key variables are dumpster number,the year in which the data was collected, and the weight of the trash in tons. The median number of sports balls in 2017 was 8. There are 24 observations and three variables in mr_trash_wheel_monthly. The total precipitation in 2018 was 70.33 tons. 
 
 ## Problem 2
 
@@ -41,7 +53,6 @@ separate(mon,c("year","month","day"),"-") %>%
   mutate(month=month.name[as.integer(month)]) %>%
   mutate(president=recode(prez_dem, `1` = "dem", `0` = "gop")) %>%
   select(-prez_dem,-prez_gop,-day)
-head(pols_month)
 ```
 
 Read and clean snp:
@@ -52,7 +63,6 @@ separate(date,c("month","day","year"),"/") %>%
   arrange(year, month_integer) %>%
   select(year, month, close, -day, -month_integer) 
 
-snp
 ```
 Read and clean unemployment:
 ```{r}
@@ -62,7 +72,6 @@ unemployment=read_csv("./p8105_hw2_ng2696_files/fivethirtyeight_datasets/unemplo
                values_to="percent_unemployed") %>%
     mutate(month=recode(month, `Jan` = "January", `Feb` = "February",`Mar` = "March",`Apr` = "April",`May` = "May",`Jun` = "June",`Jul` = "July",`Aug` = "August",`Sep` = "September",`Oct` = "October",`Nov` = "November", `Dec`="December")) %>%
     janitor::clean_names() 
-unemployment
 ```
 
 Merge snp and pols_month:
@@ -70,14 +79,19 @@ Merge snp and pols_month:
 snp_pols_month=
 left_join(snp, pols_month, by=c("year","month")) %>%
   mutate(year=as.integer(year))
-snp_pols_month
 ```
 Merge above dataset with unemployment:
 ```{r}
 snp_pols_unemployment=
 left_join(snp_pols_month, unemployment, by=c("year","month"))
-snp_pols_unemployment
+head(snp_pols_unemployment) 
+dim(snp_pols_unemployment)
+min(snp_pols_month$year)
+max(snp_pols_month$year)
 ```
+
+The pols_month dataset contained monthly data on the number of elected officials of a given political party from the year 1950 to 2015. The snp dataset contained monthly data onthe closing values of the S&P stock index. The unemployment dataset contained monthly data on the percentage of the population that is unemployed. Once we merged these data, the resulting data set has 787 observations and 11 variables including unemployed, close, and president, which indicates whether a Republican or Democrat was in that office in that month. Each observation is a month between the years 1950 to 2015.
+
 ## Problem 3
 
 Read and clean dataset:
